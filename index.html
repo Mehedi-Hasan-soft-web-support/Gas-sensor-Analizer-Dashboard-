@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Gas Sensor Analytics Platform</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111927;
+      --bg-accent: #1a2332;
+      --text-primary: #e4e6eb;
+      --text-secondary: #b0b3b8;
+      --accent-color: #00ffaa;
+      --danger-color: #ff3e3e;
+      --warning-color: #ffbb00;
+      --success-color: #00dd9d;
+      --panel-border: 1px solid rgba(255, 255, 255, 0.08);
+      --panel-radius: 6px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+    
+    header {
+      background-color: var(--bg-secondary);
+      border-bottom: var(--panel-border);
+      padding: 1rem 2rem;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    
+    .logo span.highlight {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+    
+    .status-panel {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+    
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--success-color);
+    }
+    
+    .system-nav {
+      background-color: var(--bg-secondary);
+      padding: 0.5rem 2rem;
+      border-bottom: var(--panel-border);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    .nav-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.25rem 0;
+      transition: color 0.2s ease;
+    }
+    
+    .nav-link.active {
+      color: var(--accent-color);
+      border-bottom: 2px solid var(--accent-color);
+    }
+    
+    .nav-link:hover {
+      color: var(--accent-color);
+    }
+    
+    .main-container {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    
+    .panel {
+      background-color: var(--bg-secondary);
+      border: var(--panel-border);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      background-color: var(--bg-accent);
+      border-bottom: var(--panel-border);
+    }
+    
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .panel-badge {
+      background-color: rgba(0, 255, 170, 0.15);
+      color: var(--accent-color);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .panel-controls {
+      display: flex;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+    
+    .panel-button {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    
+    .panel-button:hover {
+      color: var(--accent-color);
+    }
+    
+    .panel-content {
+      padding: 1rem;
+    }
+    
+    .sensor-iframe {
+      border: none;
+      width: 100%;
+      height: 260px;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+    
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .metric-card {
+      background-color: var(--bg-accent);
+      border-radius: var(--panel-radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    .metric-value.danger {
+      color: var(--danger-color);
+    }
+    
+    .metric-value.warning {
+      color: var(--warning-color);
+    }
+    
+    .metric-value.normal {
+      color: var(--success-color);
+    }
+    
+    .terminal-section {
+      grid-column: 1 / -1;
+    }
+    
+    .terminal {
+      background-color: var(--bg-accent);
+      color: var(--text-primary);
+      border-radius: var(--panel-radius);
+      padding: 0.5rem;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.85rem;
+      height: 150px;
+      overflow-y: auto;
+    }
+    
+    .terminal-line {
+      margin-bottom: 0.25rem;
+    }
+    
+    .terminal-prompt {
+      color: var(--accent-color);
+    }
+    
+    .terminal-timestamp {
+      color: var(--text-secondary);
+      margin-right: 0.5rem;
+    }
+    
+    .terminal-message {
+      color: var(--text-primary);
+    }
+    
+    .terminal-alert {
+      color: var(--warning-color);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      border-top: var(--panel-border);
+    }
+    
+    .timestamp {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+    
+    .event-log {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+    
+    .event-item {
+      display: flex;
+      gap: 8px;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+    }
+    
+    .event-time {
+      color: var(--text-secondary);
+      min-width: 60px;
+    }
+    
+    .event-title {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h1>Mehedi<span class="highlight">Hasan</span> | Advanced Analytics</h1>
+      </div>
+      <div class="status-panel">
+        <div class="status-item">
+          <div class="status-indicator"></div>
+          <span>System Online</span>
+        </div>
+        <div class="status-item">
+          <div class="status-indicator" style="background-color: var(--warning-color);"></div>
+          <span>MQ-135 Elevated</span>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="system-nav">
+    <div class="nav-links">
+      <a href="#" class="nav-link active">Dashboard</a>
+      <a href="#" class="nav-link">Historical Data</a>
+      <a href="#" class="nav-link">Alerts</a>
+      <a href="#" class="nav-link">System Config</a>
+      <a href="#" class="nav-link">Reports</a>
+    </div>
+  </div>
+  
+  <div class="main-container">
+    <!-- MQ-2 Sensor Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 10H5C3.89543 10 3 10.8954 3 12V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V12C21 10.8954 20.1046 10 19 10Z" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10V6C7 3.23858 9.23858 1 12 1C14.7614 1 17 3.23858 17 6V10" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          MQ-2 Gas Sensor Telemetry
+          <span class="panel-badge">LIVE</span>
+        </h3>
+        <div class="panel-controls">
+          <button class="panel-button" title="Download Data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="panel-button" title="Refresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4V10H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 20V14H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.51 9.00001C4.01717 7.56645 4.87913 6.2899 6.01547 5.27543C7.1518 4.26095 8.52547 3.54233 10.0083 3.17776C11.4911 2.81318 13.0348 2.81559 14.5167 3.18395C15.9986 3.55231 17.3707 4.27452 18.505 5.29001L23 10M1 14L5.495 18.71C6.62929 19.7255 8.00138 20.4477 9.48326 20.8161C10.9651 21.1844 12.5089 21.1868 13.9917 20.8222C15.4745 20.4577 16.8482 19.7391 17.9845 18.7246C19.1209 17.7101 19.9828 16.4336 20.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <iframe class="sensor-iframe" src="https://thingspeak.com/channels/2948761/charts/1?bgcolor=%230a0e17&color=%2300ffaa&dynamic=true&results=60&type=line&title=&yaxis=PPM"></iframe>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Current Reading</div>
+            <div class="metric-value normal">124 PPM</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">24h Peak</div>
+            <div class="metric-value">189 PPM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MQ-135 Sensor Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 10H5C3.89543 10 3 10.8954 3 12V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V12C21 10.8954 20.1046 10 19 10Z" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10V6C7 3.23858 9.23858 1 12 1C14.7614 1 17 3.23858 17 6V10" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          MQ-135 Air Quality Monitor
+          <span class="panel-badge">LIVE</span>
+        </h3>
+        <div class="panel-controls">
+          <button class="panel-button" title="Download Data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="panel-button" title="Refresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4V10H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 20V14H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.51 9.00001C4.01717 7.56645 4.87913 6.2899 6.01547 5.27543C7.1518 4.26095 8.52547 3.54233 10.0083 3.17776C11.4911 2.81318 13.0348 2.81559 14.5167 3.18395C15.9986 3.55231 17.3707 4.27452 18.505 5.29001L23 10M1 14L5.495 18.71C6.62929 19.7255 8.00138 20.4477 9.48326 20.8161C10.9651 21.1844 12.5089 21.1868 13.9917 20.8222C15.4745 20.4577 16.8482 19.7391 17.9845 18.7246C19.1209 17.7101 19.9828 16.4336 20.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <iframe class="sensor-iframe" src="https://thingspeak.com/channels/2948761/charts/2?bgcolor=%230a0e17&color=%23ffbb00&dynamic=true&results=60&type=line&title=&yaxis=PPM"></iframe>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Current Reading</div>
+            <div class="metric-value warning">285 PPM</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">24h Peak</div>
+            <div class="metric-value">352 PPM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Event Log Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2V8H20" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 13H8" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 17H8" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 9H9H8" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          System Event Log
+        </h3>
+        <div class="panel-controls">
+          <button class="panel-button" title="Filter">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 3H2L10 12.46V19L14 21V12.46L22 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <ul class="event-log">
+          <li class="event-item">
+            <span class="event-time">14:42:03</span>
+            <span class="event-title">MQ-135 reading above threshold (285 PPM)</span>
+          </li>
+          <li class="event-item">
+            <span class="event-time">14:32:41</span>
+            <span class="event-title">Sensor calibration completed</span>
+          </li>
+          <li class="event-item">
+            <span class="event-time">14:30:00</span>
+            <span class="event-title">System maintenance routine initiated</span>
+          </li>
+          <li class="event-item">
+            <span class="event-time">14:15:22</span>
+            <span class="event-title">MQ-2 reading normalized (124 PPM)</span>
+          </li>
+          <li class="event-item">
+            <span class="event-time">13:52:07</span>
+            <span class="event-title">ThingSpeak connection refreshed</span>
+          </li>
+          <li class="event-item">
+            <span class="event-time">13:45:33</span>
+            <span class="event-title">ESP32 firmware status: v2.1.4 (Current)</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Network Status Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.34315 17.6569C7.84344 19.1571 9.87827 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 14.1217 4.84285 16.1566 6.34315 17.6569Z" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 16H12.01" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 12V8" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Security & Network Status
+        </h3>
+        <div class="panel-controls">
+          <button class="panel-button" title="Scan Network">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">API Status</div>
+            <div class="metric-value normal">ONLINE</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">ESP32 Status</div>
+            <div class="metric-value normal">CONNECTED</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Network Latency</div>
+            <div class="metric-value">86 ms</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Uptime</div>
+            <div class="metric-value">18:24:15</div>
+          </div>
+        </div>
+        <div class="timestamp">Last security scan: <span id="lastScan">05 May 2025, 14:32:41</span></div>
+      </div>
+    </div>
+    
+    <!-- Terminal Section -->
+    <div class="panel terminal-section">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 17L10 11L4 5" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 19H20" stroke="#00ffaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          System Console
+        </h3>
+        <div class="panel-controls">
+          <button class="panel-button" title="Clear Terminal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 6V20H5V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M23 6H1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="terminal">
+          <div class="terminal-line">
+            <span class="terminal-timestamp">[14:42:03]</span>
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-message">Sensor check complete. MQ-135 showing elevated readings of 285 PPM.</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-timestamp">[14:40:15]</span>
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-message">Running diagnostic on sensor array...</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-timestamp">[14:32:41]</span>
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-message">Calibration protocol executed. Status: SUCCESS</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-timestamp">[14:30:00]</span>
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-message">Initiating system maintenance routine</span>
+          </div>
+          <div class="terminal-line">
+            <span class="terminal-timestamp">[14:15:22]</span>
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-message">MQ-2 readings normalized at 124 PPM</span>
+          </div
